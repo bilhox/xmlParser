@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.21)
+project(xmlParser LANGUAGES CXX)
+
+add_executable(xmlParser
+src/main.cpp 
+src/tree.cpp
+)
+
+target_compile_features(xmlParser PRIVATE cxx_std_17)
+# if (WIN32 AND BUILD_SHARED_LIBS)
+#     add_custom_command(TARGET platformer POST_BUILD
+#         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:platformer> $<TARGET_FILE_DIR:platformer> COMMAND_EXPAND_LISTS)
+# endif()
+
+install(TARGETS xmlParser)
