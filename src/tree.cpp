@@ -190,13 +190,16 @@ XMLNode parseFile(std::string path){
         // From here
 
         if(*tag.crbegin() == '/'){
+            // if it's an orphean tag
             xmlNodePtr->addChild(node);
             xmlNodePtr->content.value += tContents[t];
         } else {
             if(xmlTree.name == ""){
+                // if it's the root
                 node.content.value = tContents[t];
                 xmlTree = node;
             } else {
+                // if it's a simple node or leave
                 node.parent = xmlNodePtr;
                 node.content.value = tContents[t];
                 xmlNodePtr->addChild(node);
