@@ -30,6 +30,10 @@ class Node{
         const std::vector<Node<contentType>> & getChildren() const {
             return m_children;
         }
+
+        void resizeChildrenContainer(size_t s){
+            m_children.reserve(s);
+        }
     
     private:
 

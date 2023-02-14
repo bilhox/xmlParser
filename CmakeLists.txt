@@ -6,7 +6,7 @@ src/main.cpp
 src/tree.cpp
 )
 
-target_compile_features(xmlParser PRIVATE cxx_std_17)
+target_compile_features(xmlParser PRIVATE cxx_std_20)
 # if (WIN32 AND BUILD_SHARED_LIBS)
 #     add_custom_command(TARGET platformer POST_BUILD
 #         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:platformer> $<TARGET_FILE_DIR:platformer> COMMAND_EXPAND_LISTS)

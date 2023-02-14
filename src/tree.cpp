@@ -101,13 +101,35 @@ XMLNode parseFile(std::string path){
             tContents.push_back({bi+1 , ai});
     }
 
+    std::vector<unsigned int> childAmount;
+
+    {
+        std::unordered_map<unsigned int , size_t> indexTracker;
+        int l = 0;
+        for (auto & tag : tags){
+            if(tag[0] == '/'){
+                l--;
+                continue;
+            }
+
+            if(l-1 >= 0)
+                childAmount[indexTracker[l-1]] ++;
+
+            if(tag.back() != '/'){
+                childAmount.push_back(0);
+                indexTracker[l] = childAmount.size()-1;
+                l++;
+            }
+        }
+    }
+
     // final tree
     XMLNode xmlTree;
     // ptr to the parent
     XMLNode* xmlNodePtr = &xmlTree;
     // height
     unsigned int level = 0;
-    unsigned int tContentIt = 0;
+    unsigned int t = 0;
 
     // Child N to use , in which level
     std::unordered_map<unsigned int , unsigned int> childN;
@@ -116,7 +138,7 @@ XMLNode parseFile(std::string path){
 
         // if it's a closing tag
         if(tag[0] == '/'){
-            xmlNodePtr = (*xmlNodePtr).parent;
+            xmlNodePtr = xmlNodePtr->parent;
             childN[level] = 0;
             level--;
             continue;
@@ -136,6 +158,9 @@ XMLNode parseFile(std::string path){
         std::string tagName {tag.begin() , endTagName};
 
         XMLNode node;
+        if(childAmount[t] != 0){
+            node.resizeChildrenContainer(childAmount[t]);
+        }
         node.name = tagName;
         
         auto di = endTagName;
@@ -165,22 +190,22 @@ XMLNode parseFile(std::string path){
         // From here
 
         if(*tag.crbegin() == '/'){
-            (*xmlNodePtr).addChild(node);
-            (*xmlNodePtr).content.value += tContents[tContentIt];
+            xmlNodePtr->addChild(node);
+            xmlNodePtr->content.value += tContents[t];
         } else {
             if(xmlTree.name == ""){
-                node.content.value = tContents[tContentIt];
+                node.content.value = tContents[t];
                 xmlTree = node;
             } else {
                 node.parent = xmlNodePtr;
-                node.content.value = tContents[tContentIt];
-                (*xmlNodePtr).addChild(node);
+                node.content.value = tContents[t];
+                xmlNodePtr->addChild(node);
                 xmlNodePtr = &(*xmlNodePtr)[childN[level]];
             }
             level++;
         }
 
-        tContentIt++;
+        t++;
         
     }
     return xmlTree;
