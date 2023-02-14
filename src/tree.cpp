@@ -50,6 +50,33 @@ bool isXmlTagValid(const std::string & tag){
     return true;
 }
 
+void loadNodeAttributes(XMLNode & node , std::string & tagData){
+
+    auto di = std::find_if(tagData.begin() , tagData.end() , [](char a){return isspace(a) || a == '/';});
+    auto ei = std::find(di , tagData.end() , '=');
+    while(ei != tagData.end()){
+        std::string attributeName {di , ei};
+        attributeName = strip(attributeName);
+
+        auto guillIt = std::find(ei+1 , tagData.end() , '"');
+        auto aposIt = std::find(ei+1 , tagData.end() , '\'');
+        if(guillIt == tagData.end() || std::distance(aposIt , guillIt) > 0){
+            auto aposItEnd = std::find(aposIt+1 , tagData.end() , '\'');
+            std::string attributeValue {aposIt+1 , aposItEnd};
+            node.content.attributes[attributeName] = attributeValue;
+            ei = std::find(aposItEnd , tagData.end() , '=');
+            di = aposItEnd+1;
+        } else {
+            auto guillItEnd = std::find(guillIt+1 , tagData.end() , '"');
+            std::string attributeValue {guillIt+1 , guillIt};
+            node.content.attributes[attributeName] = attributeValue;
+            ei = std::find(guillItEnd , tagData.end() , '=');
+            di = guillItEnd+1;
+        }
+    }
+
+}
+
 XMLNode parseFile(std::string path){
 
     std::ifstream reader {path};
@@ -163,28 +190,7 @@ XMLNode parseFile(std::string path){
         }
         node.name = tagName;
         
-        auto di = endTagName;
-        auto ei = std::find(di , tag.end() , '=');
-        while(ei != tag.end()){
-            std::string attributeName {di , ei};
-            attributeName = strip(attributeName);
-
-            auto guillIt = std::find(ei+1 , tag.end() , '"');
-            auto aposIt = std::find(ei+1 , tag.end() , '\'');
-            if(guillIt == tag.end() || std::distance(aposIt , guillIt) > 0){
-                auto aposItEnd = std::find(aposIt+1 , tag.end() , '\'');
-                std::string attributeValue {aposIt+1 , aposItEnd};
-                node.content.attributes[attributeName] = attributeValue;
-                ei = std::find(aposItEnd , tag.end() , '=');
-                di = aposItEnd+1;
-            } else {
-                auto guillItEnd = std::find(guillIt+1 , tag.end() , '"');
-                std::string attributeValue {guillIt+1 , guillIt};
-                node.content.attributes[attributeName] = attributeValue;
-                ei = std::find(guillItEnd , tag.end() , '=');
-                di = guillItEnd+1;
-            }
-        }
+        loadNodeAttributes(node , tag);
         // /////////////////
 
         // From here
