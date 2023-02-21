@@ -31,13 +31,9 @@ class Node{
             return m_children;
         }
 
-        void resizeChildrenContainer(size_t s){
-            m_children.reserve(s);
+        size_t getChildrenNumber() const {
+            return m_children.size();
         }
-    
-    private:
-
-        std::vector<Node<contentType>> m_children;
 
         void updatePointers(){
             for(Node<contentType> & child : m_children){
@@ -45,6 +41,10 @@ class Node{
                 child.updatePointers();
             }
         }
+    
+    private:
+
+        std::vector<Node<contentType>> m_children;
 };
 
 struct XMLContent{
