@@ -28,6 +28,11 @@ bool isXmlTagValid(const std::string & tag){
     if(tag.length() == 0)
         return false;
 
+    if(tag.at(0) == '/'){
+        auto endName {std::find_if(tag.begin() , tag.end() , isspace)};
+        return (!strip({endName , tag.end()}).length());
+    }
+
     // Find first attribute thanks to '='
     auto ei {std::find(tag.begin() , tag.end() , '=')};
 
@@ -98,7 +103,7 @@ XMLNode parseFile(std::string path){
     std::string fcontent;
     std::string line;
 
-    // extracting file content in one string
+    // extracting file content in a single compacted string
     while (std::getline(reader , line)){
         line = strip(line , true , false);
         fcontent += line;
