@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include <functional>
 #include <unordered_map>
 #include <stack>
 
@@ -48,8 +49,11 @@ bool isXmlTagValid(const std::string & tag){
         // Looking for next attribute
         ei = std::find(ei+1 , tag.end() , '=');
 
-        if(!strip({bDelimIt+1 , ei}).length() && ei != tag.end())
+        if(!strip({bDelimIt+1 , ei}).length() && ei != tag.end()){
             return false;
+        } else if (ei == tag.end() && strip({bDelimIt+1 , tag.end()}).length()){
+            return false;
+        }
     }
 
     if(std::count(tag.begin() , tag.end() , '<'))
@@ -58,13 +62,15 @@ bool isXmlTagValid(const std::string & tag){
     return true;
 }
 
-void loadNodeAttributes(XMLNode & node , std::string & tagData){
+bool loadNodeAttributes(XMLNode & node , std::string & tagData){
 
     auto di = std::find_if(tagData.begin() , tagData.end() , [](char a){return isspace(a) || a == '/';});
     auto ei = std::find(di , tagData.end() , '=');
     while(ei != tagData.end()){
         std::string attributeName {di , ei};
         attributeName = strip(attributeName);
+        if(attributeName.find(' ') != attributeName.npos || !attributeName.length())
+            return false;
 
         auto guillIt = std::find(ei+1 , tagData.end() , '"');
         auto aposIt = std::find(ei+1 , tagData.end() , '\'');
@@ -83,6 +89,7 @@ void loadNodeAttributes(XMLNode & node , std::string & tagData){
         }
     }
 
+    return true;
 }
 
 XMLNode parseFile(std::string path){
@@ -110,15 +117,40 @@ XMLNode parseFile(std::string path){
             throw std::runtime_error("Incorrect xml encoding !");
         }
 
-        // if(*(ai+1) == '?'){
-        
-        //     auto ending {fcontent.find("?>")};
-        //     if(ending != fcontent.npos){
-        //         continue;
-        //     } else {
-        //         throw std::runtime_error("Incorrect xml encoding : invalid tag");
-        //     }
-        // }
+        // Excluding tags like <?something ?>
+        if(*(ai+1) == '?'){
+            
+            std::string sequence {"?>"};
+            std::boyer_moore_searcher searcher {sequence.begin() , sequence.end()};
+            auto closingIndex {std::search(ai+2 , fcontent.end() , searcher)};
+            
+            if(closingIndex != fcontent.end()){
+                ai = std::find(ai+1 , fcontent.end() , '<');
+                if(!tContents.empty()){
+                    tContents.back() += {closingIndex+2 , ai};
+                }
+                continue;
+            } else {
+                throw std::runtime_error("Incorrect xml encoding : invalid tag");
+            }
+        }
+
+        // Excluding commentaries
+        if(std::string {ai+1 , ai+4} == "!--"){
+            std::string sequence {"-->"};
+            std::boyer_moore_searcher searcher {sequence.begin() , sequence.end()};
+            auto closingIndex {std::search(ai+4 , fcontent.end() , searcher)};
+            
+            if(closingIndex != fcontent.end()){
+                ai = std::find(closingIndex , fcontent.end() , '<');
+                if(!tContents.empty()){
+                    tContents.back() += {closingIndex+3 , ai};
+                }
+                continue;
+            } else {
+                throw std::runtime_error("Incorrect xml encoding : invalid tag");
+            }
+        }
 
         auto bi {std::find(ai , fcontent.end() , '>')};
         bool incorrectEnding = true;
@@ -174,7 +206,8 @@ XMLNode parseFile(std::string path){
         XMLNode node;
         node.name = tagName;
         
-        loadNodeAttributes(node , tag);
+        if(!loadNodeAttributes(node , tag))
+            throw std::runtime_error("Incorrect xml encoding : invalid tag");
 
         if(tag.back() == '/'){
             nodeStack.top().get().addChild(node);
