@@ -28,6 +28,7 @@ bool isXmlTagValid(const std::string & tag){
     if(tag.length() == 0)
         return false;
 
+    // Verifying if there is on extra content after tag name when it's a closing tag
     if(tag.at(0) == '/'){
         auto endName {std::find_if(tag.begin() , tag.end() , isspace)};
         return (!strip({endName , tag.end()}).length());
