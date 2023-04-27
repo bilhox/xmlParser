@@ -1,3 +1,3 @@
 # XML parser
 
-Only parses an xml file to a tree usable in the program 
+Only parses a xml file to a tree usable in a C++ program
